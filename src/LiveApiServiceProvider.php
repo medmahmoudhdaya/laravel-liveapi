@@ -31,6 +31,9 @@ final class LiveApiServiceProvider extends ServiceProvider
             return;
         }
 
+        $this->loadViewsFrom(__DIR__.'/../resources/views', 'liveapi');
+        $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
+
         $this->offerPublishing();
         $this->registerMiddleware();
     }

@@ -15,53 +15,45 @@ final class CaptureTraffic
         protected SchemaRepository $repository
     ) {}
 
-    /**
-     * Handle the incoming request.
-     */
     public function handle(Request $request, Closure $next): Response
     {
         return $next($request);
     }
 
-    /**
-     * Handle tasks after the response has been sent to the browser.
-     */
     public function terminate(Request $request, Response $response): void
     {
         if (! $this->shouldCapture($request, $response)) {
             return;
         }
 
+        // Only capture body for methods that typically send payloads
+        $canHaveBody = in_array($request->method(), ['POST', 'PUT', 'PATCH', 'DELETE']);
+        $requestBody = $canHaveBody ? $request->json()->all() : [];
+
         $data = [
-            'method' => $request->method(),
-            'uri' => $request->route()?->uri() ?? $request->getPathInfo(),
-            'status' => $response->getStatusCode(),
-            'request_body' => $this->maskSensitiveData($request->json()->all()),
-            'response_body' => $this->maskSensitiveData(json_decode($response->getContent(), true) ?? []),
-            'query_params' => $request->query(),
+            'method'        => $request->method(),
+            'uri'           => $request->route()?->uri() ?? $request->getPathInfo(),
+            'status'        => $response->getStatusCode(),
+            'request_body'  => $this->maskSensitiveData($requestBody),
+            'response_body' => $this->maskSensitiveData(json_decode($response->getContent() ?: '{}', true) ?? []),
+            'query_params'  => $request->query(),
             'authenticated' => ! is_null($request->user()),
         ];
 
         $this->repository->record($data);
     }
 
-    /**
-     * Determine if the current request/response pair should be captured.
-     */
     protected function shouldCapture(Request $request, Response $response): bool
     {
-        // Avoid capturing if frozen or disabled
-        if (config('liveapi.frozen', false)) {
+        if (config('liveapi.frozen', false) || ! config('liveapi.enabled', true)) {
             return false;
         }
 
-        // Only capture JSON responses
         $contentType = $response->headers->get('Content-Type');
         if (! str_contains((string) $contentType, 'application/json')) {
             return false;
         }
 
-        // Ensure we are within a route (avoids 404s outside the API group)
         if (! $request->route()) {
             return false;
         }
@@ -69,15 +61,16 @@ final class CaptureTraffic
         return true;
     }
 
-    /**
-     * Recursively mask sensitive fields defined in config.
-     */
     protected function maskSensitiveData(array $data): array
     {
         $masks = config('liveapi.mask_fields', []);
 
+        if (empty($masks)) {
+            return $data;
+        }
+
         array_walk_recursive($data, function (&$value, $key) use ($masks) {
-            if (in_array($key, $masks, true)) {
+            if (in_array(strtolower((string) $key), $masks, true)) {
                 $value = '*****';
             }
         });

@@ -1,0 +1,19 @@
+{
+    "name": "zidbih/laravel-liveapi",
+    "description": "Runtime OpenAPI generation for Laravel by observing real API traffic.",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Zidbih\\LiveApi\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "zidbih",
+            "email": "medmahmoudhdaya@gmail.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {}
+}

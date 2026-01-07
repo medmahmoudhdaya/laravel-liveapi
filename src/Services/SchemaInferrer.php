@@ -1,8 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Zidbih\LiveApi\Services;
 
-class SchemaInferrer
+final class SchemaInferrer
 {
     public function merge(array $existing, array $snapshot): array
     {
@@ -34,9 +36,9 @@ class SchemaInferrer
                     'schema' => $this->inferSchema(
                         $existingResponse['content']['application/json']['schema'] ?? [],
                         $newBody
-                    )
-                ]
-            ]
+                    ),
+                ],
+            ],
         ];
     }
 
@@ -68,7 +70,7 @@ class SchemaInferrer
             $schema['required'] = array_values(array_intersect($schema['required'], array_keys($data)));
         }
 
-        if ($type === 'array' && !empty($data)) {
+        if ($type === 'array' && ! empty($data)) {
             $schema['items'] = $this->inferSchema($schema['items'] ?? [], $data[0] ?? null);
         }
 
@@ -95,21 +97,35 @@ class SchemaInferrer
 
     protected function getJsonType(mixed $data): string
     {
-        if (is_null($data)) return 'null';
-        if (is_int($data)) return 'integer';
-        if (is_float($data)) return 'number';
-        if (is_bool($data)) return 'boolean';
+        if (is_null($data)) {
+            return 'null';
+        }
+        if (is_int($data)) {
+            return 'integer';
+        }
+        if (is_float($data)) {
+            return 'number';
+        }
+        if (is_bool($data)) {
+            return 'boolean';
+        }
         if (is_array($data)) {
             return array_is_list($data) ? 'array' : 'object';
         }
+
         return 'string';
     }
 
     protected function resolveTypeConflict(string $old, string $new): string
     {
         $types = [$old, $new];
-        if (in_array('number', $types) && in_array('integer', $types)) return 'number';
-        if (in_array('null', $types)) return $old === 'null' ? $new : $old; // Handle nullability later via 'nullable' key
+        if (in_array('number', $types, true) && in_array('integer', $types, true)) {
+            return 'number';
+        }
+        if (in_array('null', $types, true)) {
+            return $old === 'null' ? $new : $old;
+        } // Handle nullability later via 'nullable' key
+
         return 'string'; // Default fallback
     }
 
@@ -118,9 +134,10 @@ class SchemaInferrer
         foreach ($new as $key => $value) {
             $existing[$key] = [
                 'type' => $this->getJsonType($value),
-                'example' => $value
+                'example' => $value,
             ];
         }
+
         return $existing;
     }
 }

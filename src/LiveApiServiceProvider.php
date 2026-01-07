@@ -1,19 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Zidbih\LiveApi;
 
-use Illuminate\Support\ServiceProvider;
 use Illuminate\Contracts\Http\Kernel;
+use Illuminate\Support\ServiceProvider;
 use Zidbih\LiveApi\Http\Middleware\CaptureTraffic;
 
-class LiveApiServiceProvider extends ServiceProvider
+final class LiveApiServiceProvider extends ServiceProvider
 {
     /**
      * Register any application services.
      */
     public function register(): void
     {
-        $this->mergeConfigFrom(__DIR__ . '/../config/liveapi.php', 'liveapi');
+        $this->mergeConfigFrom(__DIR__.'/../config/liveapi.php', 'liveapi');
     }
 
     /**
@@ -25,7 +27,7 @@ class LiveApiServiceProvider extends ServiceProvider
             return;
         }
 
-        if (!config('liveapi.enabled')) {
+        if (! config('liveapi.enabled')) {
             return;
         }
 
@@ -39,8 +41,14 @@ class LiveApiServiceProvider extends ServiceProvider
     protected function offerPublishing(): void
     {
         if ($this->app->runningInConsole()) {
+            $this->commands([
+                \Zidbih\LiveApi\Console\GenerateSpecsCommand::class,
+            ]);
+        }
+
+        if ($this->app->runningInConsole()) {
             $this->publishes([
-                __DIR__ . '/../config/liveapi.php' => config_path('liveapi.php'),
+                __DIR__.'/../config/liveapi.php' => config_path('liveapi.php'),
             ], 'liveapi-config');
         }
     }
@@ -48,7 +56,7 @@ class LiveApiServiceProvider extends ServiceProvider
     /**
      * Inject the middleware into the 'api' middleware group.
      */
-    protected function registerMiddleware(): void
+    private function registerMiddleware(): void
     {
         $kernel = $this->app->make(Kernel::class);
 

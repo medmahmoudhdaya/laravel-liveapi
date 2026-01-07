@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Zidbih\LiveApi\Http\Middleware;
 
 use Closure;
@@ -7,7 +9,7 @@ use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Zidbih\LiveApi\Services\SchemaRepository;
 
-class CaptureTraffic
+final class CaptureTraffic
 {
     public function __construct(
         protected SchemaRepository $repository
@@ -26,7 +28,7 @@ class CaptureTraffic
      */
     public function terminate(Request $request, Response $response): void
     {
-        if (!$this->shouldCapture($request, $response)) {
+        if (! $this->shouldCapture($request, $response)) {
             return;
         }
 
@@ -37,7 +39,7 @@ class CaptureTraffic
             'request_body' => $this->maskSensitiveData($request->json()->all()),
             'response_body' => $this->maskSensitiveData(json_decode($response->getContent(), true) ?? []),
             'query_params' => $request->query(),
-            'authenticated' => !is_null($request->user()),
+            'authenticated' => ! is_null($request->user()),
         ];
 
         $this->repository->record($data);
@@ -55,12 +57,12 @@ class CaptureTraffic
 
         // Only capture JSON responses
         $contentType = $response->headers->get('Content-Type');
-        if (!str_contains((string) $contentType, 'application/json')) {
+        if (! str_contains((string) $contentType, 'application/json')) {
             return false;
         }
 
         // Ensure we are within a route (avoids 404s outside the API group)
-        if (!$request->route()) {
+        if (! $request->route()) {
             return false;
         }
 
@@ -75,7 +77,7 @@ class CaptureTraffic
         $masks = config('liveapi.mask_fields', []);
 
         array_walk_recursive($data, function (&$value, $key) use ($masks) {
-            if (in_array($key, $masks)) {
+            if (in_array($key, $masks, true)) {
                 $value = '*****';
             }
         });

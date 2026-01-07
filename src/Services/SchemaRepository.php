@@ -1,10 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Zidbih\LiveApi\Services;
 
 use Illuminate\Support\Facades\File;
 
-class SchemaRepository
+final class SchemaRepository
 {
     protected string $storagePath;
 
@@ -23,8 +25,8 @@ class SchemaRepository
         $key = $this->generateKey($data['method'], $data['uri']);
         $filePath = "{$this->storagePath}/snapshots/{$key}.json";
 
-        $existingSchema = File::exists($filePath) 
-            ? json_decode(File::get($filePath), true) 
+        $existingSchema = File::exists($filePath)
+            ? json_decode(File::get($filePath), true)
             : [];
 
         $inferrer = app(SchemaInferrer::class);
@@ -39,8 +41,8 @@ class SchemaRepository
     protected function generateKey(string $method, string $uri): string
     {
         $normalizedUri = str_replace(['/', '{', '}'], ['-', '', ''], trim($uri, '/'));
-        
-        return strtolower("{$method}-" . ($normalizedUri ?: 'root'));
+
+        return strtolower("{$method}-".($normalizedUri ?: 'root'));
     }
 
     /**
@@ -48,7 +50,7 @@ class SchemaRepository
      */
     protected function ensureDirectoryExists(): void
     {
-        if (!File::isDirectory("{$this->storagePath}/snapshots")) {
+        if (! File::isDirectory("{$this->storagePath}/snapshots")) {
             File::makeDirectory("{$this->storagePath}/snapshots", 0755, true);
         }
     }

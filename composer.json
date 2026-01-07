@@ -1,6 +1,6 @@
 {
     "name": "zidbih/laravel-liveapi",
-    "description": "Runtime OpenAPI generation for Laravel by observing real API traffic.",
+    "description": "Generate accurate OpenAPI specs by observing real Laravel API requests and responses at runtime.",
     "type": "library",
     "license": "MIT",
     "autoload": {

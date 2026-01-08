@@ -17,8 +17,8 @@ final class LiveApiStatusCommand extends Command
     {
         $env = app()->environment();
         $storagePath = rtrim(config('liveapi.storage_path'), '/');
-        $snapshotsPath = $storagePath . '/snapshots';
-        $specPath = $storagePath . '/openapi.json';
+        $snapshotsPath = $storagePath.'/snapshots';
+        $specPath = $storagePath.'/openapi.json';
 
         $routeCount = 0;
         $fileCount = 0;
@@ -34,12 +34,12 @@ final class LiveApiStatusCommand extends Command
         $this->info('LiveApi Status');
         $this->line(str_repeat('-', 30));
 
-        $this->line('Environment:      ' . $env);
-        $this->line('Enabled:          ' . (config('liveapi.enabled', true) ? 'yes' : 'no'));
-        $this->line('Frozen:           ' . (config('liveapi.frozen', false) ? 'yes' : 'no'));
-        $this->line('Captured routes:  ' . $routeCount);
-        $this->line('Snapshot files:   ' . $fileCount);
-        $this->line('Spec generated:   ' . (File::exists($specPath) ? 'yes' : 'no'));
+        $this->line('Environment:      '.$env);
+        $this->line('Enabled:          '.(config('liveapi.enabled', true) ? 'yes' : 'no'));
+        $this->line('Frozen:           '.(config('liveapi.frozen', false) ? 'yes' : 'no'));
+        $this->line('Captured routes:  '.$routeCount);
+        $this->line('Snapshot files:   '.$fileCount);
+        $this->line('Spec generated:   '.(File::exists($specPath) ? 'yes' : 'no'));
 
         $this->line('');
 

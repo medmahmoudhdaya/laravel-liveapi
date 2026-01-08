@@ -59,6 +59,10 @@ final class CaptureTraffic
             return false;
         }
 
+        if (! config('liveapi.enabled', true)) {
+            return false;
+        }
+
         if (config('liveapi.frozen', false)) {
             return false;
         }

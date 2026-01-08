@@ -17,20 +17,23 @@ final class LiveApiClearCommand extends Command
     {
         if (app()->isProduction()) {
             $this->error('LiveApi is hard-disabled in production.');
+
             return self::FAILURE;
         }
 
         $storagePath = rtrim(config('liveapi.storage_path'), '/');
-        $snapshotsPath = $storagePath . '/snapshots';
-        $specPath = $storagePath . '/openapi.json';
+        $snapshotsPath = $storagePath.'/snapshots';
+        $specPath = $storagePath.'/openapi.json';
 
         if (! File::exists($snapshotsPath) && ! ($this->option('spec') && File::exists($specPath))) {
             $this->info('Nothing to clear.');
+
             return self::SUCCESS;
         }
 
         if (! $this->confirm('This will delete all captured API snapshots. Continue?')) {
             $this->info('Aborted.');
+
             return self::SUCCESS;
         }
 

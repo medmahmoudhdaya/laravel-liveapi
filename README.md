@@ -94,6 +94,94 @@ LIVEAPI_BASE_URL=http://localhost
 
 ```
 
+## Sensitive data masking
+
+Laravel LiveApi is designed to be safe by default.  
+Before any request or response payload is written to disk, sensitive fields are automatically masked to prevent secrets from being persisted in snapshot files.
+
+Masking is read-only and never affects the actual request or response returned by your application.
+
+---
+
+### Default masked fields
+
+Out of the box, Laravel LiveApi masks the following fields:
+
+- `password`
+- `password_confirmation`
+- `token`
+- `card_number`
+
+When one of these fields is encountered anywhere in a JSON payload, its value is replaced with:
+
+```json
+"*****"
+```
+
+The field name and structure are preserved, but the original value is never stored.
+
+---
+
+### How masking works
+
+- Masking is applied to both request and response bodies
+- Masking is applied recursively to nested objects and arrays
+- Field name matching is case-insensitive
+- Only values are masked; keys and structure remain intact
+
+This allows schemas to be inferred correctly without exposing sensitive data.
+
+---
+
+### Adding or removing masked fields
+
+You can customize the list of masked fields in the configuration file (make sure you have published the configuration file first):
+
+```bash
+php artisan vendor:publish --tag=liveapi-config
+```
+
+```php
+// config/liveapi.php
+
+'mask_fields' => [
+    'password',
+    'password_confirmation',
+    'token',
+    'card_number',
+    'api_key',
+    'secret',
+],
+```
+
+Any field name added to this list will be masked automatically.  
+Removing a field from the list will allow its value to be captured.
+
+---
+
+### Headers and sensitive metadata
+
+Laravel LiveApi does not record sensitive headers such as:
+
+- `Authorization`
+- `Cookie`
+- CSRF-related headers
+
+These headers are excluded by design and cannot be captured accidentally.
+
+---
+
+### Security guarantees
+
+- Sensitive values are masked before snapshots are written to disk
+- No raw secrets are ever stored
+- Requests and responses are never mutated
+- Masking cannot be disabled per request
+- Production traffic is never captured
+
+This behavior is enforced consistently and does not rely on developer discipline.
+
+
 ## How it works
 
 - A global middleware intercepts all `api/*` routes

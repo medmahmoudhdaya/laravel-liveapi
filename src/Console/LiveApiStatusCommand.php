@@ -30,20 +30,23 @@ final class LiveApiStatusCommand extends Command
             }
         }
 
-        $this->line('');
-        $this->info('LiveApi Status');
-        $this->line(str_repeat('-', 30));
+        $this->newLine();
+        $this->info('LiveApi Status :');
 
-        $this->line('Environment:      '.$env);
-        $this->line('Enabled:          '.(config('liveapi.enabled', true) ? 'yes' : 'no'));
-        $this->line('Frozen:           '.(config('liveapi.frozen', false) ? 'yes' : 'no'));
-        $this->line('Captured routes:  '.$routeCount);
-        $this->line('Snapshot files:   '.$fileCount);
-        $this->line('Spec generated:   '.(File::exists($specPath) ? 'yes' : 'no'));
-
-        $this->line('');
+        $this->table(
+            ['Metric', 'Value'],
+            [
+                ['Environment', ucfirst($env)],
+                ['Enabled', config('liveapi.enabled', true) ? 'Yes' : 'No'],
+                ['Frozen', config('liveapi.frozen', false) ? 'Yes' : 'No'],
+                ['Captured routes', $routeCount],
+                ['Snapshot files', $fileCount],
+                ['Spec generated', File::exists($specPath) ? 'Yes' : 'No'],
+            ]
+        );
 
         if ($env === 'production') {
+            $this->newLine();
             $this->warn('LiveApi is hard-disabled in production.');
         }
 

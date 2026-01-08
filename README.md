@@ -358,8 +358,12 @@ All data is stored as plain JSON:
 ```
 storage/liveapi/
 ├── snapshots/
-│   ├── get-api-users-profile.json
-│   ├── post-api-users-profile.json
+│   ├── get-47421dd7d271091c5fba4fbe363a48daab5c155/
+│   │   ├── guest.json
+│   │   └── auth.json
+│   ├── post-a1b2c3d4e5f6.../
+│   │   ├── guest.json
+│   │   └── auth.json
 │   └── ...
 └── openapi.json
 ```

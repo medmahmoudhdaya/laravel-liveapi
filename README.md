@@ -60,6 +60,16 @@ You now have a deterministic `openapi.json` file that reflects what your API act
 
 ---
 
+## Dashboard
+
+Laravel LiveApi exposes a local dashboard at `/liveapi` that renders the generated OpenAPI specification, with the raw spec available at `/liveapi/openapi.json`. The dashboard is enabled only in local and testing environments and uses Swagger UI by default as a viewer. It requires no configuration and reflects the API’s actual runtime behavior inferred from real requests and responses. The dashboard is intentionally thin — the generated `openapi.json` file remains the primary output and can be consumed by any OpenAPI-compatible tool.
+
+> Example of the Swagger UI dashboard rendering an OpenAPI specification inferred from real API traffic during local development.
+
+![Swagger dashboard](docs/images/swagger-dashboard.png)
+
+---
+
 ## Environment configuration (optional)
 
 Laravel LiveApi works out of the box with **zero configuration**.  
@@ -146,16 +156,6 @@ Route::get('/api/users/profile', function (Request $request) {
 ```
 
 Optional fields are inferred automatically.
-
----
-
-## Dashboard
-
-Laravel LiveApi exposes a local dashboard at `/liveapi` that renders the generated OpenAPI specification, with the raw spec available at `/liveapi/openapi.json`. The dashboard is enabled only in local and testing environments and uses Swagger UI by default as a viewer. It requires no configuration and reflects the API’s actual runtime behavior inferred from real requests and responses. The dashboard is intentionally thin — the generated `openapi.json` file remains the primary output and can be consumed by any OpenAPI-compatible tool.
-
-> Example of the Swagger UI dashboard rendering an OpenAPI specification inferred from real API traffic during local development.
-
-![Swagger dashboard](docs/images/swagger-dashboard.png)
 
 ---
 

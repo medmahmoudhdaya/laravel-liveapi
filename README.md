@@ -229,17 +229,48 @@ Route::get('/api/users/profile', function (Request $request) {
 { "id": 1, "username": "zidbih", "bio": "Software Engineer" }
 ```
 
-### Generated schema (simplified)
+### Generated schema
 
 ```json
 {
-  "type": "object",
-  "properties": {
-    "id": { "type": "integer" },
-    "username": { "type": "string" },
-    "bio": { "type": "string" }
-  },
-  "required": ["id", "username"]
+    "method": "GET",
+    "uri": "api/users/profile",
+    "authenticated": false,
+    "query_params": {
+        "extra": {
+            "type": "string",
+            "example": "1"
+        }
+    },
+    "request_body": [],
+    "responses": {
+        "200": {
+            "description": "Automated response inference",
+            "content": {
+                "application/json": {
+                    "schema": {
+                        "type": "object",
+                        "properties": {
+                            "id": {
+                                "type": "integer"
+                            },
+                            "username": {
+                                "type": "string"
+                            },
+                            "bio": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "id",
+                            "username"
+                        ],
+                        "additionalProperties": false
+                    }
+                }
+            }
+        }
+    }
 }
 ```
 

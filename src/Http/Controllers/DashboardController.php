@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Zidbih\LiveApi\Http\Controllers;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\File;
 
-class DashboardController extends Controller
+final class DashboardController extends Controller
 {
     /**
      * Display the Swagger UI.
@@ -21,9 +23,9 @@ class DashboardController extends Controller
      */
     public function json(): JsonResponse
     {
-        $path = config('liveapi.storage_path') . '/openapi.json';
+        $path = config('liveapi.storage_path').'/openapi.json';
 
-        if (!File::exists($path)) {
+        if (! File::exists($path)) {
             return response()->json(['error' => 'Specification not found. Run php artisan liveapi:generate'], 404);
         }
 

@@ -27,16 +27,16 @@ final class CaptureTraffic
         }
 
         // Only capture body for methods that typically send payloads
-        $canHaveBody = in_array($request->method(), ['POST', 'PUT', 'PATCH', 'DELETE']);
+        $canHaveBody = in_array($request->method(), ['POST', 'PUT', 'PATCH', 'DELETE'], true);
         $requestBody = $canHaveBody ? $request->json()->all() : [];
 
         $data = [
-            'method'        => $request->method(),
-            'uri'           => $request->route()?->uri() ?? $request->getPathInfo(),
-            'status'        => $response->getStatusCode(),
-            'request_body'  => $this->maskSensitiveData($requestBody),
+            'method' => $request->method(),
+            'uri' => $request->route()?->uri() ?? $request->getPathInfo(),
+            'status' => $response->getStatusCode(),
+            'request_body' => $this->maskSensitiveData($requestBody),
             'response_body' => $this->maskSensitiveData(json_decode($response->getContent() ?: '{}', true) ?? []),
-            'query_params'  => $request->query(),
+            'query_params' => $request->query(),
             'authenticated' => ! is_null($request->user()),
         ];
 

@@ -37,7 +37,9 @@ final class OpenApiGenerator
 
         foreach ($files as $file) {
             $data = json_decode(File::get($file), true);
-            $this->addPath($spec, $data);
+            if ($data) {
+                $this->addPath($spec, $data);
+            }
         }
 
         // Sort paths alphabetically for git-friendly deterministic output
@@ -54,10 +56,12 @@ final class OpenApiGenerator
 
         $pathItem = [
             'summary' => "{$data['method']} {$uri}",
-            'responses' => $data['responses'],
+            'responses' => $this->formatResponses($data['responses']),
         ];
 
-        if (! empty($data['request_body'])) {
+        // SENIOR FIX: Only add requestBody if there is actual schema data
+        // AND it's not a GET/DELETE request (which typically don't have bodies)
+        if (! empty($data['request_body']) && ! in_array($method, ['get', 'delete', 'head'], true)) {
             $pathItem['requestBody'] = [
                 'required' => true,
                 'content' => [
@@ -72,10 +76,24 @@ final class OpenApiGenerator
             $pathItem['security'] = [[$securityName => []]];
         }
 
-        $firstSegment = explode('/', ltrim($uri, '/'))[1] ?? 'default';
-        $pathItem['tags'] = [ucfirst($firstSegment)];
+        // Improved Tagging: Grab the first meaningful segment after /api/
+        $segments = explode('/', ltrim($uri, '/'));
+        $tagIndex = $segments[0] === 'api' ? 1 : 0;
+        $tag = $segments[$tagIndex] ?? 'Default';
+
+        $pathItem['tags'] = [ucfirst($tag)];
 
         $spec['paths'][$uri][$method] = $pathItem;
+    }
+
+    /**
+     * Ensures responses are sorted by status code and formatted correctly.
+     */
+    protected function formatResponses(array $responses): array
+    {
+        ksort($responses);
+
+        return $responses;
     }
 
     protected function getSecuritySchemes(): array

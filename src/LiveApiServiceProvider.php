@@ -6,6 +6,9 @@ namespace Zidbih\LiveApi;
 
 use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Support\ServiceProvider;
+use Zidbih\LiveApi\Console\GenerateSpecsCommand;
+use Zidbih\LiveApi\Console\LiveApiClearCommand;
+use Zidbih\LiveApi\Console\LiveApiStatusCommand;
 use Zidbih\LiveApi\Http\Middleware\CaptureTraffic;
 
 final class LiveApiServiceProvider extends ServiceProvider
@@ -39,7 +42,9 @@ final class LiveApiServiceProvider extends ServiceProvider
         }
 
         $this->commands([
-            \Zidbih\LiveApi\Console\GenerateSpecsCommand::class,
+            GenerateSpecsCommand::class,
+            LiveApiStatusCommand::class,
+            LiveApiClearCommand::class,
         ]);
 
         $this->publishes([

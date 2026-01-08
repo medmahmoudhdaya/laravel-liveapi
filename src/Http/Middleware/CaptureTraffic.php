@@ -41,12 +41,12 @@ final class CaptureTraffic
         }
 
         $data = [
-            'method'        => $request->method(),
-            'uri'           => $request->route()?->uri() ?? $request->getPathInfo(),
-            'status'        => $response->getStatusCode(),
-            'request_body'  => $requestBody,
+            'method' => $request->method(),
+            'uri' => $request->route()?->uri() ?? $request->getPathInfo(),
+            'status' => $response->getStatusCode(),
+            'request_body' => $requestBody,
             'response_body' => $decoded ?? [],
-            'query_params'  => $this->maskSensitiveData($request->query()),
+            'query_params' => $this->maskSensitiveData($request->query()),
             'authenticated' => $request->user() !== null,
         ];
 

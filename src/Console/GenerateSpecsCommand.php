@@ -18,11 +18,13 @@ final class GenerateSpecsCommand extends Command
     {
         if (app()->isProduction()) {
             $this->error('LiveApi is hard-disabled in production.');
+
             return self::FAILURE;
         }
 
         if (config('liveapi.frozen', false) && ! $this->option('force')) {
             $this->error('Freeze mode is enabled. Use --force to regenerate the spec.');
+
             return self::FAILURE;
         }
 
@@ -32,6 +34,7 @@ final class GenerateSpecsCommand extends Command
 
         if (! is_array($spec) || empty($spec['openapi'])) {
             $this->error('Failed to generate a valid OpenAPI specification.');
+
             return self::FAILURE;
         }
 
@@ -44,7 +47,7 @@ final class GenerateSpecsCommand extends Command
             json_encode($spec, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)
         );
 
-        $this->info("Specification generated successfully at:");
+        $this->info('Specification generated successfully at:');
         $this->line($outputPath);
 
         return self::SUCCESS;

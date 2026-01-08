@@ -21,15 +21,15 @@ final class SchemaInferrer
             : ($existing['request_body'] ?? []);
 
         return [
-            'method'        => $snapshot['method'],
-            'uri'           => $snapshot['uri'],
+            'method' => $snapshot['method'],
+            'uri' => $snapshot['uri'],
             'authenticated' => $snapshot['authenticated'],
-            'query_params'  => $this->mergeParameters(
+            'query_params' => $this->mergeParameters(
                 $existing['query_params'] ?? [],
                 $snapshot['query_params']
             ),
-            'request_body'  => $requestBody,
-            'responses'     => $responses,
+            'request_body' => $requestBody,
+            'responses' => $responses,
         ];
     }
 
@@ -119,12 +119,12 @@ final class SchemaInferrer
     protected function getJsonType(mixed $data): string
     {
         return match (true) {
-            is_null($data)   => 'null',
-            is_int($data)    => 'integer',
-            is_float($data)  => 'number',
-            is_bool($data)   => 'boolean',
-            is_array($data)  => array_is_list($data) ? 'array' : 'object',
-            default          => 'string',
+            is_null($data) => 'null',
+            is_int($data) => 'integer',
+            is_float($data) => 'number',
+            is_bool($data) => 'boolean',
+            is_array($data) => array_is_list($data) ? 'array' : 'object',
+            default => 'string',
         };
     }
 
@@ -146,7 +146,7 @@ final class SchemaInferrer
     {
         foreach ($new as $key => $value) {
             $existing[$key] = [
-                'type'    => $this->getJsonType($value),
+                'type' => $this->getJsonType($value),
                 'example' => $value,
             ];
         }

@@ -5,5 +5,9 @@
         "declare_strict_types": true,
         "final_class": true,
         "final_internal_class": false
-    }
+    },
+    "exclude": [
+      "config"
+    ]
+
 }

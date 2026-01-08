@@ -10,9 +10,10 @@ final class SchemaRepository
 {
     protected string $storagePath;
 
-    public function __construct()
-    {
-        $this->storagePath = config('liveapi.storage_path');
+    public function __construct(
+        protected SchemaInferrer $inferrer
+    ) {
+        $this->storagePath = rtrim(config('liveapi.storage_path'), '/');
     }
 
     /**
@@ -20,29 +21,45 @@ final class SchemaRepository
      */
     public function record(array $data): void
     {
+        if (config('liveapi.frozen', false)) {
+            return;
+        }
+
         $this->ensureDirectoryExists();
 
+        $auth = ! empty($data['authenticated']) ? 'authenticated' : 'guest';
         $key = $this->generateKey($data['method'], $data['uri']);
-        $filePath = "{$this->storagePath}/snapshots/{$key}.json";
+
+        $dir = "{$this->storagePath}/snapshots/{$key}";
+        File::ensureDirectoryExists($dir);
+
+        $filePath = "{$dir}/{$auth}.json";
 
         $existingSchema = File::exists($filePath)
             ? json_decode(File::get($filePath), true)
             : [];
 
-        $inferrer = app(SchemaInferrer::class);
-        $updatedSchema = $inferrer->merge($existingSchema, $data);
+        if (! is_array($existingSchema)) {
+            $existingSchema = [];
+        }
 
-        File::put($filePath, json_encode($updatedSchema, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+        $updatedSchema = $this->inferrer->merge($existingSchema, $data);
+
+        $tmp = $filePath.'.tmp';
+        File::put(
+            $tmp,
+            json_encode($updatedSchema, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)
+        );
+
+        rename($tmp, $filePath);
     }
 
     /**
-     * Generates a filesystem-friendly key for the route.
+     * Generates a collision-safe filesystem key for the route.
      */
     protected function generateKey(string $method, string $uri): string
     {
-        $normalizedUri = str_replace(['/', '{', '}'], ['-', '', ''], trim($uri, '/'));
-
-        return strtolower("{$method}-".($normalizedUri ?: 'root'));
+        return strtolower($method.'-'.sha1($uri));
     }
 
     /**
@@ -50,8 +67,6 @@ final class SchemaRepository
      */
     protected function ensureDirectoryExists(): void
     {
-        if (! File::isDirectory("{$this->storagePath}/snapshots")) {
-            File::makeDirectory("{$this->storagePath}/snapshots", 0755, true);
-        }
+        File::ensureDirectoryExists("{$this->storagePath}/snapshots");
     }
 }

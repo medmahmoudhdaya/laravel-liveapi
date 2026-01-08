@@ -10,18 +10,21 @@ final class OpenApiGenerator
 {
     public function generate(): array
     {
-        $storagePath = config('liveapi.storage_path').'/snapshots';
-        $config = config('liveapi.openapi');
+        $storagePath = rtrim(config('liveapi.storage_path'), '/').'/snapshots';
+        $config = config('liveapi.openapi', []);
 
         $spec = [
             'openapi' => '3.1.0',
             'info' => [
-                'title' => $config['title'],
-                'version' => $config['version'],
-                'description' => $config['description'],
+                'title' => $config['title'] ?? 'API',
+                'version' => $config['version'] ?? '1.0.0',
+                'description' => $config['description'] ?? '',
             ],
             'servers' => [
-                ['url' => $config['base_url'], 'description' => 'Current Environment'],
+                [
+                    'url' => $config['base_url'] ?? 'http://localhost',
+                    'description' => 'Current Environment',
+                ],
             ],
             'paths' => [],
             'components' => [
@@ -33,36 +36,51 @@ final class OpenApiGenerator
             return $spec;
         }
 
-        $files = File::files($storagePath);
+        foreach (File::directories($storagePath) as $routeDir) {
+            foreach (File::files($routeDir) as $file) {
+                $data = json_decode(File::get($file), true);
 
-        foreach ($files as $file) {
-            $data = json_decode(File::get($file), true);
-            if ($data) {
+                if (! is_array($data)) {
+                    continue;
+                }
+
                 $this->addPath($spec, $data);
             }
         }
 
-        // Sort paths alphabetically for git-friendly deterministic output
+        // Deterministic ordering (git-friendly)
         ksort($spec['paths']);
+        foreach ($spec['paths'] as &$methods) {
+            ksort($methods);
+        }
 
         return $spec;
     }
 
     protected function addPath(array &$spec, array $data): void
     {
+        if (
+            empty($data['uri']) ||
+            empty($data['method']) ||
+            empty($data['responses'])
+        ) {
+            return;
+        }
+
         $uri = '/'.ltrim($data['uri'], '/');
         $method = strtolower($data['method']);
         $securityName = config('liveapi.openapi.security_scheme', 'Sanctum');
 
-        $pathItem = [
+        $operation = [
             'summary' => "{$data['method']} {$uri}",
             'responses' => $this->formatResponses($data['responses']),
         ];
 
-        // SENIOR FIX: Only add requestBody if there is actual schema data
-        // AND it's not a GET/DELETE request (which typically don't have bodies)
-        if (! empty($data['request_body']) && ! in_array($method, ['get', 'delete', 'head'], true)) {
-            $pathItem['requestBody'] = [
+        if (
+            ! empty($data['request_body']) &&
+            ! in_array($method, ['get', 'delete', 'head'], true)
+        ) {
+            $operation['requestBody'] = [
                 'required' => true,
                 'content' => [
                     'application/json' => [
@@ -72,23 +90,22 @@ final class OpenApiGenerator
             ];
         }
 
-        if ($data['authenticated']) {
-            $pathItem['security'] = [[$securityName => []]];
+        if (! empty($data['authenticated'])) {
+            $operation['security'] = [
+                [$securityName => []],
+            ];
         }
 
-        // Improved Tagging: Grab the first meaningful segment after /api/
+        // Simple deterministic tagging
         $segments = explode('/', ltrim($uri, '/'));
         $tagIndex = $segments[0] === 'api' ? 1 : 0;
         $tag = $segments[$tagIndex] ?? 'Default';
 
-        $pathItem['tags'] = [ucfirst($tag)];
+        $operation['tags'] = [ucfirst($tag)];
 
-        $spec['paths'][$uri][$method] = $pathItem;
+        $spec['paths'][$uri][$method] = $operation;
     }
 
-    /**
-     * Ensures responses are sorted by status code and formatted correctly.
-     */
     protected function formatResponses(array $responses): array
     {
         ksort($responses);

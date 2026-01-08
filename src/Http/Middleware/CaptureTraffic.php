@@ -26,18 +26,28 @@ final class CaptureTraffic
             return;
         }
 
-        // Only capture body for methods that typically send payloads
-        $canHaveBody = in_array($request->method(), ['POST', 'PUT', 'PATCH', 'DELETE'], true);
-        $requestBody = $canHaveBody ? $request->json()->all() : [];
+        $requestBody = $request->isJson()
+            ? $this->maskSensitiveData($request->json()->all())
+            : [];
+
+        $content = $response->getContent();
+        $decoded = null;
+
+        if ($content !== '') {
+            $decoded = json_decode($content, true);
+            if (! is_array($decoded)) {
+                return;
+            }
+        }
 
         $data = [
-            'method' => $request->method(),
-            'uri' => $request->route()?->uri() ?? $request->getPathInfo(),
-            'status' => $response->getStatusCode(),
-            'request_body' => $this->maskSensitiveData($requestBody),
-            'response_body' => $this->maskSensitiveData(json_decode($response->getContent() ?: '{}', true) ?? []),
-            'query_params' => $request->query(),
-            'authenticated' => ! is_null($request->user()),
+            'method'        => $request->method(),
+            'uri'           => $request->route()?->uri() ?? $request->getPathInfo(),
+            'status'        => $response->getStatusCode(),
+            'request_body'  => $requestBody,
+            'response_body' => $decoded ?? [],
+            'query_params'  => $this->maskSensitiveData($request->query()),
+            'authenticated' => $request->user() !== null,
         ];
 
         $this->repository->record($data);
@@ -45,12 +55,11 @@ final class CaptureTraffic
 
     protected function shouldCapture(Request $request, Response $response): bool
     {
-        if (config('liveapi.frozen', false) || ! config('liveapi.enabled', true)) {
+        if (app()->isProduction()) {
             return false;
         }
 
-        $contentType = $response->headers->get('Content-Type');
-        if (! str_contains((string) $contentType, 'application/json')) {
+        if (config('liveapi.frozen', false)) {
             return false;
         }
 
@@ -58,12 +67,14 @@ final class CaptureTraffic
             return false;
         }
 
-        return true;
+        $contentType = (string) $response->headers->get('Content-Type');
+
+        return str_contains($contentType, 'application/json');
     }
 
     protected function maskSensitiveData(array $data): array
     {
-        $masks = config('liveapi.mask_fields', []);
+        $masks = array_map('strtolower', config('liveapi.mask_fields', []));
 
         if (empty($masks)) {
             return $data;

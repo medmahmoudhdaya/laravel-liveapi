@@ -7,14 +7,19 @@ namespace Zidbih\LiveApi\Http\Controllers;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\File;
+use Illuminate\View\View;
 
 final class DashboardController extends Controller
 {
     /**
-     * Display the Swagger UI.
+     * Display the OpenAPI dashboard.
      */
-    public function index()
+    public function index(): View
     {
+        if (app()->isProduction()) {
+            abort(404);
+        }
+
         return view('liveapi::dashboard');
     }
 
@@ -23,12 +28,31 @@ final class DashboardController extends Controller
      */
     public function json(): JsonResponse
     {
-        $path = config('liveapi.storage_path').'/openapi.json';
-
-        if (! File::exists($path)) {
-            return response()->json(['error' => 'Specification not found. Run php artisan liveapi:generate'], 404);
+        if (app()->isProduction()) {
+            abort(404);
         }
 
-        return response()->json(json_decode(File::get($path), true));
+        $path = rtrim(config('liveapi.storage_path'), '/').'/openapi.json';
+
+        if (! File::exists($path)) {
+            return response()->json(
+                ['error' => 'Specification not found. Run php artisan liveapi:generate'],
+                404
+            );
+        }
+
+        $decoded = json_decode(File::get($path), true);
+
+        if (! is_array($decoded)) {
+            return response()->json(
+                ['error' => 'Invalid OpenAPI specification file. Regenerate it.'],
+                500
+            );
+        }
+
+        return response()
+            ->json($decoded)
+            ->setPublic()
+            ->setMaxAge(60);
     }
 }
